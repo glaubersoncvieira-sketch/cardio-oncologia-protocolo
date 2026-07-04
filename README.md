@@ -98,7 +98,7 @@ Digite o nome do medicamento e receba automaticamente:
 ## 📁 Estrutura do Projeto
 
 ```
-cardio_oncology_system/
+cardio-oncologia-protocolo/
 ├── client/
 │   └── src/
 │       ├── pages/
@@ -162,8 +162,8 @@ O arquivo `cardio_oncologia_offline.html` é uma versão standalone completa do 
 
 ```bash
 # Clonar o repositório
-git clone https://github.com/SEU_USUARIO/cardio_oncology_system.git
-cd cardio_oncology_system
+git clone https://github.com/glaubersoncvieira-sketch/cardio-oncologia-protocolo.git
+cd cardio-oncologia-protocolo
 
 # Instalar dependências
 pnpm install
