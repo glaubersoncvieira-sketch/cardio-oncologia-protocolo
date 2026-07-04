@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0f172a">
+<title>Cardio-Oncologia v2.0 — Protocolo Offline</title>
+<style>
+  :root{--bg:#f8fafc;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--primary:#0f766e;--primary-light:#ccfbf1;--danger:#dc2626;--danger-light:#fee2e2;--warning:#d97706;--warning-light:#fef3c7;--success:#16a34a;--success-light:#dcfce7;--info:#2563eb;--info-light:#dbeafe;--sidebar-w:240px;--radius:10px}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+  /* Layout */
+  #app{display:flex;min-height:100vh}
+  #sidebar{width:var(--sidebar-w);background:#0f172a;color:#e2e8f0;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;transform:translateX(-100%);transition:transform .25s ease}
+  #sidebar.open{transform:translateX(0)}
+  #sidebar-logo{padding:16px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px}
+  #sidebar-logo .logo-icon{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+  #sidebar-logo .logo-text{font-weight:700;font-size:15px;line-height:1.2}
+  #sidebar-logo .logo-sub{font-size:11px;color:#94a3b8}
+  #sidebar nav{flex:1;padding:8px 0}
+  #sidebar nav a{display:flex;align-items:center;gap:10px;padding:10px 16px;color:#cbd5e1;text-decoration:none;font-size:13px;transition:background .15s,color .15s;border-radius:0}
+  #sidebar nav a:hover,#sidebar nav a.active{background:#1e293b;color:#fff}
+  #sidebar nav a .nav-icon{font-size:16px;width:20px;text-align:center}
+  #sidebar-footer{padding:12px 16px;border-top:1px solid #1e293b;font-size:11px;color:#64748b}
+  #main{flex:1;margin-left:0;min-height:100vh;display:flex;flex-direction:column}
+  #topbar{background:#fff;border-bottom:1px solid var(--border);padding:0 16px;height:56px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:50}
+  #menu-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text);padding:4px;border-radius:6px}
+  #topbar-title{font-weight:600;font-size:15px;flex:1}
+  #topbar-version{font-size:11px;color:var(--muted);background:var(--primary-light);color:var(--primary);padding:2px 8px;border-radius:20px}
+  #content{flex:1;padding:16px;max-width:900px;width:100%}
+  /* Overlay */
+  #overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}
+  #overlay.show{display:block}
+  /* Cards */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+  .card-title{font-weight:700;font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .card-subtitle{color:var(--muted);font-size:12px;margin-bottom:12px}
+  /* Badges */
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge-danger{background:var(--danger-light);color:var(--danger)}
+  .badge-warning{background:var(--warning-light);color:var(--warning)}
+  .badge-success{background:var(--success-light);color:var(--success)}
+  .badge-info{background:var(--info-light);color:var(--info)}
+  .badge-primary{background:var(--primary-light);color:var(--primary)}
+  .badge-gray{background:#f1f5f9;color:var(--muted)}
+  /* Grid */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  /* Tabs */
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+  .tab{padding:8px 14px;border:none;background:none;cursor:pointer;font-size:13px;color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s}
+  .tab.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+  /* Tables */
+  .table-wrap{overflow-x:auto;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#f8fafc;padding:8px 10px;text-align:left;font-weight:600;border-bottom:2px solid var(--border);white-space:nowrap}
+  td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top}
+  tr:hover td{background:#f8fafc}
+  /* Forms */
+  .form-group{margin-bottom:14px}
+  label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+  input,select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fff;color:var(--text);outline:none;transition:border .15s}
+  input:focus,select:focus{border-color:var(--primary)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover{background:#0d6b63}
+  .btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .btn-outline:hover{background:#f8fafc}
+  /* Risk colors */
+  .risk-baixo{background:#dcfce7;color:#16a34a;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .risk-moderado{background:#fef3c7;color:#d97706;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .risk-alto{background:#ffedd5;color:#ea580c;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .risk-muito_alto{background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  /* Alert boxes */
+  .alert{padding:12px 14px;border-radius:8px;margin-bottom:12px;font-size:13px}
+  .alert-danger{background:var(--danger-light);border-left:4px solid var(--danger);color:#7f1d1d}
+  .alert-warning{background:var(--warning-light);border-left:4px solid var(--warning);color:#78350f}
+  .alert-success{background:var(--success-light);border-left:4px solid var(--success);color:#14532d}
+  .alert-info{background:var(--info-light);border-left:4px solid var(--info);color:#1e3a8a}
+  /* Drug card */
+  .drug-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;transition:box-shadow .15s}
+  .drug-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  .drug-card-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .drug-card-body{margin-top:10px;display:none;border-top:1px solid var(--border);padding-top:10px}
+  .drug-card-body.show{display:block}
+  .drug-info-row{display:flex;gap:8px;margin-bottom:6px;font-size:13px}
+  .drug-info-label{font-weight:600;color:var(--muted);min-width:120px;flex-shrink:0}
+  /* Section headers */
+  .section-header{margin-bottom:16px}
+  .section-header h1{font-size:20px;font-weight:700;color:var(--text)}
+  .section-header p{color:var(--muted);font-size:13px;margin-top:4px}
+  /* Search */
+  .search-box{position:relative;margin-bottom:16px}
+  .search-box input{padding-left:36px}
+  .search-box .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+  /* Monitoring grid */
+  .monitor-check{display:inline-block;width:20px;height:20px;border-radius:50%;text-align:center;line-height:20px;font-size:11px}
+  .check-yes{background:var(--success-light);color:var(--success)}
+  .check-no{background:#f1f5f9;color:#94a3b8}
+  /* Print */
+  @media print{#sidebar,#topbar,#menu-btn{display:none!important}#main{margin-left:0!important}#content{padding:0!important}}
+  /* Desktop */
+  @media(min-width:768px){
+    #sidebar{transform:translateX(0);position:fixed}
+    #main{margin-left:var(--sidebar-w)}
+    #menu-btn{display:none}
+    #overlay{display:none!important}
+    #content{padding:24px}
+  }
+  /* Page visibility */
+  .page{display:none}
+  .page.active{display:block}
+  /* Collapsible */
+  .collapsible-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:4px;transition:background .15s}
+  .collapsible-header:hover{background:#f8fafc}
+  .collapsible-body{display:none;padding:14px;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-bottom:8px}
+  .collapsible-body.show{display:block}
+  .chevron{transition:transform .2s}
+  .chevron.open{transform:rotate(180deg)}
+  /* Stat cards */
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+  .stat-value{font-size:28px;font-weight:800;color:var(--primary)}
+  .stat-label{font-size:11px;color:var(--muted);margin-top:2px}
+</style>
+</head>
+<body>
+<div id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+  <div id="sidebar-logo">
+    <div class="logo-icon">♥</div>
+    <div>
+      <div class="logo-text">CardioOncologia</div>
+      <div class="logo-sub">Protocolo Offline v2.0</div>
+    </div>
+  </div>
+  <nav>
+    <a href="#" class="active" onclick="showPage('home',this)"><span class="nav-icon">🏠</span> Início</a>
+    <a href="#" onclick="showPage('search',this)"><span class="nav-icon">🔍</span> Busca Rápida</a>
+    <a href="#" onclick="showPage('protocol',this)"><span class="nav-icon">📋</span> Protocolo</a>
+    <a href="#" onclick="showPage('calculator',this)"><span class="nav-icon">🧮</span> Calculadora</a>
+    <a href="#" onclick="showPage('cardio',this)"><span class="nav-icon">❤️</span> Cardio-Oncologia</a>
+    <a href="#" onclick="showPage('monitoring',this)"><span class="nav-icon">📊</span> Monitoramento</a>
+    <a href="#" onclick="showPage('ctcae',this)"><span class="nav-icon">⚠️</span> CTCAE v5.0</a>
+    <a href="#" onclick="showPage('interactions',this)"><span class="nav-icon">⚡</span> Interações</a>
+    <a href="#" onclick="showPage('special',this)"><span class="nav-icon">🩺</span> Cuidados Especiais</a>
+    <a href="#" onclick="showPage('protocols',this)"><span class="nav-icon">💊</span> Protocolos QT</a>
+  </nav>
+  <div id="sidebar-footer">
+    ESC 2022 · ASCO 2017 · SBOC 2026<br>
+    Versão 2.0 — Julho 2026
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <button id="menu-btn" onclick="toggleSidebar()">☰</button>
+    <span id="topbar-title">Cardio-Oncologia</span>
+    <span id="topbar-version">v2.0</span>
+  </div>
+  <div id="content">
+
+    <!-- HOME -->
+    <div id="page-home" class="page active">
+      <div class="section-header">
+        <h1>Protocolo Eletrônico de Cardio-Oncologia</h1>
+        <p>Sistema clínico interativo · ESC 2022 · ASCO 2017 · SBOC 2026 · Versão offline para celular</p>
+      </div>
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-card"><div class="stat-value">20</div><div class="stat-label">Medicamentos</div></div>
+        <div class="stat-card"><div class="stat-value">10</div><div class="stat-label">Classes Farmacológicas</div></div>
+        <div class="stat-card"><div class="stat-value">3</div><div class="stat-label">Diretrizes</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="cursor:pointer" onclick="showPage('search',null)">
+          <div class="card-title">🔍 Busca Rápida</div>
+          <div class="card-subtitle">Pesquise qualquer quimioterápico por nome genérico ou comercial</div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="showPage('calculator',null)">
+          <div class="card-title">🧮 Calculadora BSA</div>
+          <div class="card-subtitle">Calcule dose por superfície corporal (Mosteller/DuBois) e ClCr</div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="showPage('cardio',null)">
+          <div class="card-title">❤️ Risco Cardiovascular</div>
+          <div class="card-subtitle">Estratificação ESC 2022: baixo, moderado, alto, muito alto</div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="showPage('ctcae',null)">
+          <div class="card-title">⚠️ CTCAE v5.0</div>
+          <div class="card-subtitle">Toxicidades cardíacas por grau com conduta clínica</div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="showPage('special',null)">
+          <div class="card-title">🩺 Cuidados Especiais</div>
+          <div class="card-subtitle">Miocardite ICI, disfunção VE, hipertensão TKI, Takotsubo, TEV</div>
+        </div>
+        <div class="card" style="cursor:pointer" onclick="showPage('protocols',null)">
+          <div class="card-title">💊 Protocolos QT</div>
+          <div class="card-subtitle">ACdd, TCHP, TC, Ipi+Nivo, Axitinibe+Pembro e outros</div>
+        </div>
+      </div>
+      <div class="alert alert-info">
+        <strong>ℹ️ Uso offline:</strong> Este arquivo funciona 100% sem internet. Salve na tela inicial do celular para acesso rápido em plantão ou consultório. Dados baseados nas diretrizes ESC 2022, ASCO 2017 e SBOC 2026.
+      </div>
+      <div class="alert alert-warning">
+        <strong>⚠️ Aviso clínico:</strong> Este protocolo é uma ferramenta de suporte à decisão clínica. Sempre confirme doses e condutas com as diretrizes vigentes e adapte ao contexto individual do paciente.
+      </div>
+    </div>
+
+    <!-- BUSCA RÁPIDA -->
+    <div id="page-search" class="page">
+      <div class="section-header">
+        <h1>🔍 Busca Rápida de Medicamentos</h1>
+        <p>Pesquise por nome genérico, comercial ou classe farmacológica</p>
+      </div>
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="drug-search" placeholder="Ex: doxorrubicina, Herceptin, TKI, antracíclina..." oninput="filterDrugs(this.value)">
+      </div>
+      <div id="drug-list"></div>
+    </div>
+
+    <!-- PROTOCOLO -->
+    <div id="page-protocol" class="page">
+      <div class="section-header">
+        <h1>📋 Protocolo de Medicamentos</h1>
+        <p>20 fármacos oncológicos com perfil completo de cardiotoxicidade</p>
+      </div>
+      <div class="tabs" id="protocol-tabs">
+        <button class="tab active" onclick="filterByClass(0,this)">Todos (20)</button>
+        <button class="tab" onclick="filterByClass(1,this)">Antracíclinas</button>
+        <button class="tab" onclick="filterByClass(2,this)">Anti-HER2</button>
+        <button class="tab" onclick="filterByClass(3,this)">ICI</button>
+        <button class="tab" onclick="filterByClass(4,this)">TKIs</button>
+        <button class="tab" onclick="filterByClass(5,this)">Alquilantes</button>
+        <button class="tab" onclick="filterByClass(6,this)">Antimetabólitos</button>
+        <button class="tab" onclick="filterByClass(7,this)">CDK4/6</button>
+        <button class="tab" onclick="filterByClass(8,this)">PARP</button>
+        <button class="tab" onclick="filterByClass(9,this)">BRAF/MEK</button>
+        <button class="tab" onclick="filterByClass(10,this)">Hormonais</button>
+      </div>
+      <div id="protocol-list"></div>
+    </div>
+
+    <!-- CALCULADORA -->
+    <div id="page-calculator" class="page">
+      <div class="section-header">
+        <h1>🧮 Calculadora de Dose</h1>
+        <p>BSA (Mosteller/DuBois), ClCr (Cockcroft-Gault) e Dose Calvert</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Dados do Paciente</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Peso (kg)</label>
+            <input type="number" id="calc-weight" placeholder="70" min="20" max="300" oninput="calcAll()">
+          </div>
+          <div class="form-group">
+            <label>Altura (cm)</label>
+            <input type="number" id="calc-height" placeholder="170" min="100" max="250" oninput="calcAll()">
+          </div>
+          <div class="form-group">
+            <label>Idade (anos)</label>
+            <input type="number" id="calc-age" placeholder="55" min="1" max="120" oninput="calcAll()">
+          </div>
+          <div class="form-group">
+            <label>Sexo</label>
+            <select id="calc-sex" onchange="calcAll()">
+              <option value="masculino">Masculino</option>
+              <option value="feminino">Feminino</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Creatinina sérica (mg/dL)</label>
+            <input type="number" id="calc-creatinine" placeholder="0.9" step="0.1" min="0.1" max="20" oninput="calcAll()">
+          </div>
+          <div class="form-group">
+            <label>Dose padrão (mg/m² ou mg/kg)</label>
+            <input type="number" id="calc-dose" placeholder="60" step="0.1" oninput="calcAll()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Unidade de dose</label>
+          <select id="calc-unit" onchange="calcAll()">
+            <option value="m2">mg/m² (por superfície corporal)</option>
+            <option value="kg">mg/kg (por peso)</option>
+            <option value="fixed">mg (dose fixa)</option>
+          </select>
+        </div>
+      </div>
+      <div id="calc-results"></div>
+      <div class="card">
+        <div class="card-title">Dose Calvert (Carboplatina)</div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>AUC alvo</label>
+            <select id="calc-auc">
+              <option value="4">AUC 4 (baixa intensidade)</option>
+              <option value="5">AUC 5 (intensidade padrão)</option>
+              <option value="6" selected>AUC 6 (alta intensidade)</option>
+              <option value="7">AUC 7 (muito alta)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>GFR/ClCr (mL/min)</label>
+            <input type="number" id="calc-gfr" placeholder="80" oninput="calcCalvert()">
+          </div>
+        </div>
+        <div id="calvert-result"></div>
+      </div>
+    </div>
+
+    <!-- CARDIO-ONCOLOGIA -->
+    <div id="page-cardio" class="page">
+      <div class="section-header">
+        <h1>❤️ Cardio-Oncologia — Estratificação de Risco</h1>
+        <p>Baseado nas Diretrizes ESC 2022 de Cardio-Oncologia</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Fatores de Risco Cardiovascular</div>
+        <div class="card-subtitle">Selecione os fatores presentes no paciente para calcular o risco</div>
+        <div id="risk-factors-list"></div>
+        <button class="btn btn-primary" onclick="calcRisk()" style="margin-top:12px">Calcular Risco CV</button>
+      </div>
+      <div id="risk-result" style="display:none" class="card">
+        <div class="card-title">Resultado da Estratificação</div>
+        <div id="risk-result-content"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Tipos de Cardiotoxicidade</div>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Tipo</th><th>Mecanismo</th><th>Reversibilidade</th><th>Exemplos</th></tr>
+            <tr><td><strong>Tipo I</strong></td><td>Lesão estrutural irreversível do cardiomiócito (necrose, apoptose)</td><td><span class="badge badge-danger">Irreversível</span></td><td>Antracíclinas, ciclofosfamida HD</td></tr>
+            <tr><td><strong>Tipo II</strong></td><td>Disfunção funcional reversível (bloqueio de vias de sobrevivência)</td><td><span class="badge badge-success">Reversível</span></td><td>Trastuzumabe, pertuzumabe</td></tr>
+            <tr><td><strong>Misto</strong></td><td>Componentes de tipo I e II</td><td><span class="badge badge-warning">Parcialmente reversível</span></td><td>TKIs, antimetabólitos</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Biomarcadores Cardíacos</div>
+        <div class="table-wrap">
+          <table>
+            <tr><th>Biomarcador</th><th>Uso clínico</th><th>Valores de referência</th><th>Significado</th></tr>
+            <tr><td><strong>Troponina I/T</strong></td><td>Marcador de lesão miocárdica</td><td>Troponina I &lt;0,04 ng/mL; Troponina T &lt;14 ng/L</td><td>Elevação = lesão aguda do cardiomiócito</td></tr>
+            <tr><td><strong>BNP</strong></td><td>Marcador de disfunção ventricular</td><td>&lt;100 pg/mL</td><td>Elevação = sobrecarga de pressão/volume do VE</td></tr>
+            <tr><td><strong>NT-proBNP</strong></td><td>Marcador de disfunção ventricular</td><td>&lt;125 pg/mL (&lt;75 anos); &lt;450 pg/mL (≥75 anos)</td><td>Maior meia-vida que BNP; mais estável</td></tr>
+            <tr><td><strong>LVEF (ecocardiograma)</strong></td><td>Função sistólica do VE</td><td>Normal ≥53% (ESC 2022) ou ≥55% (ASCO 2017)</td><td>Queda ≥10pp = disfunção significativa</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- MONITORAMENTO -->
+    <div id="page-monitoring" class="page">
+      <div class="section-header">
+        <h1>📊 Monitoramento Cardíaco</h1>
+        <p>Cronogramas de ecocardiograma, ECG e exames laboratoriais por protocolo</p>
+      </div>
+      <div id="monitoring-content"></div>
+    </div>
+
+    <!-- CTCAE v5.0 -->
+    <div id="page-ctcae" class="page">
+      <div class="section-header">
+        <h1>⚠️ CTCAE v5.0 — Toxicidades Cardíacas</h1>
+        <p>Common Terminology Criteria for Adverse Events · NCI/NIH 2017</p>
+      </div>
+      <div id="ctcae-content"></div>
+    </div>
+
+    <!-- INTERAÇÕES -->
+    <div id="page-interactions" class="page">
+      <div class="section-header">
+        <h1>⚡ Interações Medicamentosas</h1>
+        <p>Interações cardiotóxicas relevantes com foco em prolongamento de QT e cardiotoxicidade aditiva</p>
+      </div>
+      <div id="interactions-content"></div>
+    </div>
+
+    <!-- CUIDADOS ESPECIAIS -->
+    <div id="page-special" class="page">
+      <div class="section-header">
+        <h1>🩺 Cuidados Especiais em Cardio-Oncologia</h1>
+        <p>Protocolos de manejo para situações de alto risco cardiovascular</p>
+      </div>
+      <div id="special-content"></div>
+    </div>
+
+    <!-- PROTOCOLOS QT -->
+    <div id="page-protocols" class="page">
+      <div class="section-header">
+        <h1>💊 Protocolos de Quimioterapia</h1>
+        <p>Esquemas referenciados nas Diretrizes SBOC 2026 com perfil de cardiotoxicidade</p>
+      </div>
+      <div id="protocols-content"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ============================================================
+// BASE DE DADOS CLÍNICA — CARDIO-ONCOLOGIA v2.0
+// Fonte: Diretrizes SBOC 2026, ESC 2022, ASCO 2017
+// ============================================================
+
+const DRUG_CLASSES = [
+  {id:1,name:"Antracíclinas",cardiotoxicityType:"tipo_I"},
+  {id:2,name:"Agentes Anti-HER2",cardiotoxicityType:"tipo_II"},
+  {id:3,name:"Inibidores de Checkpoint Imunológico (ICI)",cardiotoxicityType:"tipo_I"},
+  {id:4,name:"Inibidores de Tirosina Quinase (TKIs)",cardiotoxicityType:"misto"},
+  {id:5,name:"Agentes Alquilantes",cardiotoxicityType:"tipo_I"},
+  {id:6,name:"Antimetabólitos",cardiotoxicityType:"misto"},
+  {id:7,name:"Inibidores de CDK4/6",cardiotoxicityType:"nenhum"},
+  {id:8,name:"Inibidores de PARP",cardiotoxicityType:"nenhum"},
+  {id:9,name:"Inibidores de BRAF/MEK",cardiotoxicityType:"misto"},
+  {id:10,name:"Inibidores de mTOR",cardiotoxicityType:"nenhum"},
+  {id:11,name:"Terapia Hormonal / Antiandrogênicos",cardiotoxicityType:"misto"},
+];
+
+const MEDICATIONS = [
+  {id:1,genericName:"Doxorrubicina",brandNames:"Adriamycin, Rubex",drugClassId:1,standardDose:"60 mg/m² EV D1 a cada 3 semanas (AC) | 60 mg/m² EV D1 a cada 2 semanas (ACdd dose-densa)",doseUnit:"mg/m²",maxCumulativeDose:450,maxCumulativeDoseUnit:"mg/m²",cardiotoxicityRisk:"alto",cardiotoxicityProfile:"Cardiotoxicidade tipo I (irreversível). Incidência de IC: 3-5% com dose ≤450 mg/m²; 7-26% com >550 mg/m². Fatores de risco: dose cumulativa, velocidade de infusão, idade >65 anos, RT mediastinal prévia.",lvefMonitoring:true,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Intercalação no DNA, inibição da topoisomerase II, geração de radicais livres via ciclo redox do grupo quinona.",indications:"Mama (AC, ACdd, FAC, FEC), linfomas (CHOP), leucemias, sarcomas.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Bilirrubina 1,2-3,0 mg/dL → 50% da dose; 3,1-5,0 mg/dL → 25%; >5,0 mg/dL → contraindicado.",cardioProtection:"Dexrazoxano se dose cumulativa >300 mg/m². Formulação lipossomal: menor cardiotoxicidade. Ecocardiograma basal e a cada 100 mg/m² acumulados.",references:"SBOC 2026 - Mama; ESC 2022 Seção 5.1; ASCO 2017"},
+  {id:2,genericName:"Epirrubicina",brandNames:"Ellence, Farmorubicin",drugClassId:1,standardDose:"100 mg/m² EV D1 a cada 3 semanas (FEC-100) | 90 mg/m² EV D1 a cada 3 semanas (FEC-90)",doseUnit:"mg/m²",maxCumulativeDose:900,maxCumulativeDoseUnit:"mg/m²",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Cardiotoxicidade tipo I. Dose cumulativa máxima: 900 mg/m² (equivale a ~450 mg/m² de doxorrubicina). Incidência de IC: ~1-2% com dose ≤900 mg/m².",lvefMonitoring:true,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Epímero da doxorrubicina. Mesmo mecanismo, menor cardiotoxicidade em doses equimolares.",indications:"Mama (FEC, EC), câncer gástrico, linfomas.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Bilirrubina 1,2-3,0 mg/dL → 50%; >3,0 mg/dL → 25%.",cardioProtection:"Ecocardiograma basal e periódico. Dexrazoxano para doses cumulativas elevadas.",references:"SBOC 2026 - Mama; ESC 2022 Seção 5.1"},
+  {id:3,genericName:"Trastuzumabe",brandNames:"Herceptin, Kanjinti, Herzuma",drugClassId:2,standardDose:"8 mg/kg EV D1 (ataque) → 6 mg/kg EV D1 a cada 3 semanas | 600 mg SC D1 a cada 3 semanas",doseUnit:"mg/kg",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Cardiotoxicidade tipo II (reversível). Incidência: 3-7% monoterapia; 13-27% com antracíclinas. Geralmente reversível com suspensão (80-90%).",lvefMonitoring:true,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Anticorpo monoclonal anti-HER2 (domínio IV). Inibe sinalização PI3K/AKT e MAPK. Induz ADCC.",indications:"Mama HER2+ (adjuvância, neoadjuvância, metastático), gástrico HER2+.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Não requer ajuste.",cardioProtection:"LVEF basal, a cada 3 meses durante tratamento, 6 meses após término. Suspender se LVEF cair ≥10pp e ficar <50%. Intervalo mínimo 3 semanas após antracíclina.",references:"SBOC 2026 - Mama; ESC 2022 Seção 5.2; ASCO 2017"},
+  {id:4,genericName:"Pertuzumabe",brandNames:"Perjeta",drugClassId:2,standardDose:"840 mg EV D1 (ataque) → 420 mg EV D1 a cada 3 semanas",doseUnit:"mg (dose fixa)",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Cardiotoxicidade tipo II. Perfil similar ao trastuzumabe. Incidência: ~1-4% em combinação. Sem aumento significativo vs trastuzumabe isolado (CLEOPATRA, APHINITY).",lvefMonitoring:true,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Anticorpo monoclonal anti-HER2 (domínio II). Inibe dimerização HER2-HER3. Complementar ao trastuzumabe.",indications:"Mama HER2+ neoadjuvância (TCHP), adjuvância (pós-neoadjuvância), metastático 1ª linha.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Não requer ajuste.",cardioProtection:"Monitoramento de LVEF conforme protocolo de trastuzumabe.",references:"SBOC 2026 - Mama; ESC 2022 Seção 5.2"},
+  {id:5,genericName:"Trastuzumabe entansina (T-DM1)",brandNames:"Kadcyla",drugClassId:2,standardDose:"3,6 mg/kg EV D1 a cada 3 semanas por 14 ciclos (adjuvância pós-neoadjuvância)",doseUnit:"mg/kg",cardiotoxicityRisk:"baixo",cardiotoxicityProfile:"Cardiotoxicidade tipo II. Incidência de disfunção ventricular: ~1-2%. Perfil cardiovascular favorável.",lvefMonitoring:true,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"ADC: trastuzumabe + emtansina (inibidor de microtúbulos). Duplo mecanismo antitumoral.",indications:"Mama HER2+ com doença residual após neoadjuvância (KATHERINE). Metastático após trastuzumabe + taxano (EMILIA).",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Cautela em disfunção hepática grave.",cardioProtection:"Monitoramento de LVEF conforme protocolo padrão anti-HER2.",references:"SBOC 2026 - Mama (KATHERINE); ESC 2022 Seção 5.2"},
+  {id:6,genericName:"Pembrolizumabe",brandNames:"Keytruda",drugClassId:3,standardDose:"200 mg EV D1 a cada 3 semanas | 400 mg EV D1 a cada 6 semanas",doseUnit:"mg (dose fixa)",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Miocardite imunomediada: ~0,5-1% monoterapia. Fatal em 25-50% dos casos graves. Outras: pericardite, vasculite, bloqueio AV.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:true,mechanismOfAction:"Anticorpo anti-PD-1 (IgG4). Bloqueia PD-1/PD-L1 e PD-1/PD-L2, restaurando atividade citotóxica de células T.",indications:"Mama TNBC (KN522), melanoma, CPNPC, colo uterino, gástrico HER2-, bexiga, TMB-high.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Não requer ajuste.",cardioProtection:"Troponina e ECG basais e a cada ciclo nos primeiros 3 meses. Suspender imediatamente se suspeita de miocardite. Corticosteroides para grau ≥2.",references:"SBOC 2026 - Mama TNBC, Melanoma; ESC 2022 Seção 5.4"},
+  {id:7,genericName:"Nivolumabe",brandNames:"Opdivo",drugClassId:3,standardDose:"240 mg EV D1 a cada 2 semanas | 480 mg EV D1 a cada 4 semanas",doseUnit:"mg (dose fixa)",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Miocardite imunomediada: ~0,5-1% monoterapia; ~2-3% em combinação com ipilimumabe. Bloqueio AV, arritmias, IC aguda.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:true,mechanismOfAction:"Anticorpo anti-PD-1 (IgG4). Mecanismo idêntico ao pembrolizumabe.",indications:"Melanoma (adjuvância e metastático), CPNPC, rim (combinação com ipilimumabe ou cabozantinibe), gástrico, bexiga, Hodgkin.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Não requer ajuste.",cardioProtection:"Monitoramento cardiovascular idêntico ao pembrolizumabe. Atenção especial na combinação com ipilimumabe.",references:"SBOC 2026 - Melanoma, Rim; ESC 2022 Seção 5.4"},
+  {id:8,genericName:"Ipilimumabe",brandNames:"Yervoy",drugClassId:3,standardDose:"3 mg/kg EV D1 a cada 3 semanas por 4 ciclos (monoterapia) | 1 mg/kg EV D1 a cada 3 semanas (combinação com nivolumabe)",doseUnit:"mg/kg",cardiotoxicityRisk:"alto",cardiotoxicityProfile:"Maior risco de miocardite entre os ICIs. Incidência: ~1-3% em combinação com nivolumabe. Mortalidade por miocardite: ~25-50%.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:true,mechanismOfAction:"Anticorpo anti-CTLA-4 (IgG1). Bloqueia sinal inibitório CTLA-4, potencializando ativação de células T.",indications:"Melanoma metastático (monoterapia ou combinação com nivolumabe), CCR (combinação), CPNPC.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Não requer ajuste.",cardioProtection:"Monitoramento cardiovascular intensivo, especialmente na combinação com nivolumabe. Troponina e ECG basais e a cada ciclo.",references:"SBOC 2026 - Melanoma, Rim; ESC 2022 Seção 5.4"},
+  {id:9,genericName:"Sunitinibe",brandNames:"Sutent",drugClassId:4,standardDose:"50 mg VO 1x/dia (4 semanas on/2 semanas off) | 37,5 mg VO 1x/dia continuamente",doseUnit:"mg/dia",cardiotoxicityRisk:"alto",cardiotoxicityProfile:"Hipertensão: 17-34% (grau 3-4: 8-15%). Disfunção VE: 2-8%. QTc prolongado: 0,5-1%. IC: 1-3%.",lvefMonitoring:true,qtProlongation:true,hypertensionRisk:true,myocarditisRisk:false,mechanismOfAction:"Inibidor multialvo: VEGFR-1/2/3, PDGFR-α/β, c-Kit, FLT3, RET. Inibe angiogênese e proliferação.",indications:"CCR (1ª linha baixo/intermediário risco IMDC), GIST resistente a imatinibe, tumores neuroendócrinos pancreáticos.",renalAdjustment:"Não requer ajuste para ClCr >30 mL/min.",hepaticAdjustment:"Não requer ajuste para Child-Pugh A/B.",cardioProtection:"PA antes e durante tratamento. Ecocardiograma basal e a cada 3-6 meses. Meta PA <140/90 mmHg. Suspender se LVEF <40%.",references:"SBOC 2026 - Rim; ESC 2022 Seção 5.3"},
+  {id:10,genericName:"Pazopanibe",brandNames:"Votrient",drugClassId:4,standardDose:"800 mg VO 1x/dia continuamente (em jejum ou 1h após refeição)",doseUnit:"mg/dia",cardiotoxicityRisk:"alto",cardiotoxicityProfile:"Hipertensão: 40-46% (grau 3-4: 4-7%). Disfunção VE: 2-5%. QTc prolongado: 2-3%. Hepatotoxicidade importante.",lvefMonitoring:true,qtProlongation:true,hypertensionRisk:true,myocarditisRisk:false,mechanismOfAction:"Inibidor multialvo: VEGFR-1/2/3, PDGFR-α/β, c-Kit. Similar ao sunitinibe.",indications:"CCR (1ª linha baixo risco IMDC), sarcomas de partes moles (2ª linha).",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Reduzir para 200 mg/dia em disfunção moderada. Contraindicado em disfunção grave.",cardioProtection:"PA e função hepática. Ecocardiograma basal e periódico. ECG para QTc.",references:"SBOC 2026 - Rim; ESC 2022 Seção 5.3"},
+  {id:11,genericName:"Axitinibe",brandNames:"Inlyta",drugClassId:4,standardDose:"5 mg VO 12/12h continuamente (ajustar para 7 mg e 10 mg se tolerado)",doseUnit:"mg 12/12h",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Hipertensão: 40-45% (grau 3-4: 16%). Disfunção VE: <1%. TEA: ~2%. Menor cardiotoxicidade que sunitinibe/pazopanibe.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:true,myocarditisRisk:false,mechanismOfAction:"Inibidor seletivo de VEGFR-1/2/3 de 2ª geração. Maior seletividade para VEGFR.",indications:"CCR (2ª linha após falha de sunitinibe, ou 1ª linha em combinação com pembrolizumabe ou avelumabe).",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Reduzir para 2 mg 12/12h em disfunção moderada.",cardioProtection:"PA antes e durante tratamento. Meta <140/90 mmHg.",references:"SBOC 2026 - Rim; ESC 2022 Seção 5.3"},
+  {id:12,genericName:"Cabozantinibe",brandNames:"Cabometyx, Cometriq",drugClassId:4,standardDose:"60 mg VO 1x/dia (CCR monoterapia) | 40 mg VO 1x/dia (combinação com nivolumabe)",doseUnit:"mg/dia",cardiotoxicityRisk:"alto",cardiotoxicityProfile:"Hipertensão: 36-37% (grau 3-4: 15-28%). TEV: ~7%. TEA: ~2%. Perfuração GI e fístulas.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:true,myocarditisRisk:false,mechanismOfAction:"Inibidor multialvo: VEGFR-1/2/3, MET, AXL, RET, c-Kit, FLT3. Inibição de MET e AXL diferencia dos outros TKIs.",indications:"CCR (1ª linha com nivolumabe, ou 2ª linha), hepatocelular (2ª linha), tireoide medular.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Reduzir para 40 mg/dia em disfunção moderada. Contraindicado em grave.",cardioProtection:"PA intensiva. Suspender 28 dias antes de cirurgia de grande porte.",references:"SBOC 2026 - Rim; ESC 2022 Seção 5.3"},
+  {id:13,genericName:"Ciclofosfamida",brandNames:"Cytoxan, Endoxan",drugClassId:5,standardDose:"600 mg/m² EV D1 a cada 3 semanas (AC) | 100 mg/m² VO D1-D14 a cada 4 semanas (CMF)",doseUnit:"mg/m²",cardiotoxicityRisk:"baixo",cardiotoxicityProfile:"Cardiotoxicidade em altas doses (>1,5 g/m²/dia): miocardite hemorrágica, pericardite, IC aguda (7-28% em condicionamento). Em doses padrão: risco baixo.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Pró-droga ativada pelo CYP450. Forma ligações cruzadas no DNA. Ação em todas as fases do ciclo celular.",indications:"Mama (AC, CMF, TC, TCHP), linfomas (CHOP), leucemias, mieloma múltiplo.",renalAdjustment:"Reduzir 50% se ClCr <10 mL/min.",hepaticAdjustment:"Cautela em disfunção grave.",cardioProtection:"MESNA para cistite hemorrágica. Hidratação adequada. Monitoramento cardíaco em altas doses.",references:"SBOC 2026 - Mama; ESC 2022"},
+  {id:14,genericName:"Capecitabina",brandNames:"Xeloda",drugClassId:6,standardDose:"2.000-2.500 mg/m² VO D1-D14 a cada 3 semanas | 1.300 mg/m² VO D1-D28 (metronômica)",doseUnit:"mg/m²/dia",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Vasospasmo coronariano: 1-8% (mecanismo principal). Angina, IAM, arritmias. Risco aumentado em DAC prévia.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Pró-droga oral do 5-FU. Convertida em 5-FU pela timidina fosforilase. Inibe timidilato sintase.",indications:"Mama (adjuvância pós-neoadjuvância sem RPC - CREATE-X, metastático), colorretal, gástrico.",renalAdjustment:"Reduzir 25% se ClCr 30-50 mL/min. Contraindicado se ClCr <30 mL/min.",hepaticAdjustment:"Cautela em disfunção moderada. Contraindicado em grave.",cardioProtection:"Suspender imediatamente se dor torácica ou alterações no ECG. Contraindicado em DAC instável.",references:"SBOC 2026 - Mama (CREATE-X); ESC 2022"},
+  {id:15,genericName:"Ribociclibe",brandNames:"Kisqali",drugClassId:7,standardDose:"400 mg VO 1x/dia D1-D21 a cada 4 semanas (3 semanas on/1 semana off)",doseUnit:"mg/dia",cardiotoxicityRisk:"baixo",cardiotoxicityProfile:"Prolongamento QTc: 3-6% (grau 3-4: 1-3%). Monitoramento obrigatório de ECG: basal, D14 do ciclo 1, início do ciclo 2.",lvefMonitoring:false,qtProlongation:true,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Inibidor seletivo de CDK4 e CDK6. Bloqueia fosforilação de Rb, impedindo progressão G1→S.",indications:"Mama RH+/HER2- (adjuvância alto risco - NATALEE, metastático 1ª linha - MONALEESA).",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Reduzir para 200 mg/dia em disfunção moderada-grave.",cardioProtection:"ECG basal, D14 C1, início C2. Suspender se QTcF >500 ms ou aumento >60 ms do basal. Corrigir eletrólitos.",references:"SBOC 2026 - Mama (NATALEE, MONALEESA); ESC 2022"},
+  {id:16,genericName:"Palbociclibe",brandNames:"Ibrance",drugClassId:7,standardDose:"125 mg VO 1x/dia D1-D21 a cada 4 semanas (3 semanas on/1 semana off)",doseUnit:"mg/dia",cardiotoxicityRisk:"baixo",cardiotoxicityProfile:"Risco cardiovascular mínimo. Sem prolongamento significativo de QTc. Neutropenia é a principal toxicidade.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Inibidor seletivo de CDK4 e CDK6. Mecanismo similar ao ribociclibe.",indications:"Mama RH+/HER2- metastático 1ª linha (combinação com letrozol/fulvestranto - PALOMA).",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Reduzir para 75 mg/dia em disfunção hepática grave.",cardioProtection:"Monitoramento de hemograma. Sem necessidade de monitoramento cardíaco específico.",references:"SBOC 2026 - Mama Metastática; ESC 2022"},
+  {id:17,genericName:"Olaparibe",brandNames:"Lynparza",drugClassId:8,standardDose:"300 mg VO 12/12h continuamente (mama) | 400 mg VO 12/12h (ovário, próstata)",doseUnit:"mg 12/12h",cardiotoxicityRisk:"baixo",cardiotoxicityProfile:"Risco cardiovascular muito baixo. Anemia pode agravar IC preexistente. TEV: ~7%. Sem cardiotoxicidade direta.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:false,myocarditisRisk:false,mechanismOfAction:"Inibidor de PARP-1 e PARP-2. Bloqueia reparo de danos ao DNA. Morte sintética letal em células BRCA1/2 mutadas.",indications:"Mama BRCA1/2 mutado (adjuvância alto risco - OlympiA, metastático - OlympiAD), ovário BRCA mutado, próstata BRCA mutado.",renalAdjustment:"Reduzir para 200 mg 12/12h se ClCr 31-50 mL/min. Contraindicado se ClCr <30 mL/min.",hepaticAdjustment:"Não requer ajuste para leve-moderada. Cautela em grave.",cardioProtection:"Monitoramento de hemograma. Transfusão se anemia sintomática.",references:"SBOC 2026 - Mama (OlympiA); ESC 2022"},
+  {id:18,genericName:"Dabrafenibe + Trametinibe",brandNames:"Tafinlar + Mekinist",drugClassId:9,standardDose:"Dabrafenibe 150 mg VO 12/12h + Trametinibe 2 mg VO 1x/dia continuamente",doseUnit:"mg",cardiotoxicityRisk:"baixo",cardiotoxicityProfile:"Prolongamento QTc (principalmente dabrafenibe). Disfunção VE rara. Hipertensão arterial. Pirexia (efeito colateral característico).",lvefMonitoring:true,qtProlongation:true,hypertensionRisk:true,myocarditisRisk:false,mechanismOfAction:"Dabrafenibe: inibidor de BRAF V600E/K. Trametinibe: inibidor de MEK1/MEK2. Bloqueio da via MAPK/ERK.",indications:"Melanoma BRAF V600E/K mutado (adjuvância estádio III, metastático). CPNPC BRAF V600E mutado.",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Cautela em disfunção hepática moderada-grave.",cardioProtection:"Ecocardiograma basal e a cada 3 meses. PA. Temperatura corporal (pirexia).",references:"SBOC 2026 - Melanoma (COMBI-D, COMBI-V); ESC 2022"},
+  {id:19,genericName:"Abiraterona",brandNames:"Zytiga",drugClassId:11,standardDose:"1.000 mg VO 1x/dia em jejum (+ prednisona 5-10 mg/dia)",doseUnit:"mg/dia",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Hipertensão: 15-25%. Hipocalemia: 17-28% (risco de arritmias). Retenção hídrica e edema. Prolongamento QTc raro.",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:true,myocarditisRisk:false,mechanismOfAction:"Inibidor irreversível de CYP17A1 (17α-hidroxilase/C17,20-liase). Bloqueia síntese de andrógenos em testículo, adrenal e tumor.",indications:"Próstata metastático sensível à castração (mCSPC - LATITUDE, STAMPEDE) e resistente à castração (mCRPC - COU-AA-301/302).",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Reduzir para 250 mg/dia em disfunção moderada. Contraindicado em grave.",cardioProtection:"PA e potássio mensalmente. Função hepática mensalmente nos primeiros 3 meses.",references:"SBOC 2026 - Próstata Avançada; ESC 2022 Seção 5.6"},
+  {id:20,genericName:"Enzalutamida",brandNames:"Xtandi",drugClassId:11,standardDose:"160 mg VO 1x/dia continuamente",doseUnit:"mg/dia",cardiotoxicityRisk:"moderado",cardiotoxicityProfile:"Hipertensão: 11-14%. Risco de eventos cardiovasculares em pacientes com DAC prévia. Convulsões (raro, 0,5%). Síndrome de encefalopatia posterior reversível (PRES - muito raro).",lvefMonitoring:false,qtProlongation:false,hypertensionRisk:true,myocarditisRisk:false,mechanismOfAction:"Inibidor do receptor de andrógeno (AR). Bloqueia ligação de andrógenos ao AR, translocação nuclear e recrutamento de co-ativadores.",indications:"Próstata metastático sensível à castração (mCSPC - ARCHES, ENZAMET) e resistente à castração (mCRPC - PREVAIL, AFFIRM).",renalAdjustment:"Não requer ajuste.",hepaticAdjustment:"Não requer ajuste para disfunção leve-moderada.",cardioProtection:"PA e monitoramento cardiovascular. Cautela em pacientes com DAC prévia.",references:"SBOC 2026 - Próstata Avançada; ESC 2022 Seção 5.6"},
+];
+
+const DRUG_INTERACTIONS = [
+  {id:1,drug1:"Doxorrubicina",drug2:"Trastuzumabe",severity:"grave",mechanism:"Potencialização da cardiotoxicidade: doxorrubicina causa dano oxidativo (tipo I), trastuzumabe bloqueia reparo HER2/ErbB4 (tipo II).",clinicalEffect:"IC em 27% com uso concomitante vs 7-8% com uso sequencial.",management:"USO CONCOMITANTE CONTRAINDICADO. Intervalo mínimo de 3 semanas após última dose de antracíclina.",qtRisk:false},
+  {id:2,drug1:"Ribociclibe",drug2:"Inibidores de CYP3A4 fortes (cetoconazol, claritromicina, ritonavir)",severity:"grave",mechanism:"Inibição do metabolismo do ribociclibe via CYP3A4, aumentando níveis plasmáticos e risco de QTc.",clinicalEffect:"Aumento da exposição ao ribociclibe (AUC até 3x). Risco aumentado de QTc e Torsades de Pointes.",management:"Evitar combinação. Se necessário, reduzir dose de ribociclibe e monitorar ECG frequentemente.",qtRisk:true},
+  {id:3,drug1:"Pembrolizumabe",drug2:"Corticosteroides sistêmicos (uso profilático)",severity:"moderada",mechanism:"Corticosteroides podem atenuar a resposta imune antitumoral mediada pelo pembrolizumabe.",clinicalEffect:"Potencial redução da eficácia antitumoral.",management:"Evitar uso profilático. Usar para manejo de toxicidades imunomediadas conforme indicado.",qtRisk:false},
+  {id:4,drug1:"Sunitinibe",drug2:"Inibidores de CYP3A4 fortes",severity:"grave",mechanism:"Inibição do metabolismo do sunitinibe via CYP3A4, aumentando níveis plasmáticos.",clinicalEffect:"Maior risco de hipertensão grave, cardiotoxicidade e outros efeitos adversos.",management:"Evitar combinação. Se necessário, reduzir dose de sunitinibe para 37,5 mg/dia.",qtRisk:false},
+  {id:5,drug1:"Capecitabina",drug2:"Varfarina",severity:"grave",mechanism:"Capecitabina inibe metabolismo da varfarina via CYP2C9, aumentando efeito anticoagulante.",clinicalEffect:"Aumento do INR com risco de sangramento grave.",management:"Monitoramento frequente do INR (semanalmente nas primeiras semanas). Ajustar dose de varfarina.",qtRisk:false},
+  {id:6,drug1:"Pembrolizumabe",drug2:"Ipilimumabe (combinação)",severity:"grave",mechanism:"Duplo bloqueio de checkpoint (PD-1 + CTLA-4) causa ativação imune sinérgica.",clinicalEffect:"Miocardite: ~2-3% (vs ~0,5-1% monoterapia). Maior risco de colite, hepatite e outras toxicidades graves.",management:"Monitoramento cardiovascular intensivo. Troponina e ECG basais e a cada ciclo. Suspender imediatamente se suspeita de miocardite.",qtRisk:false},
+  {id:7,drug1:"Qualquer QT-prolongador",drug2:"Antiarrítmicos classe IA/III (amiodarona, sotalol, quinidina)",severity:"contraindicada",mechanism:"Efeito aditivo no prolongamento do intervalo QT por bloqueio de canais iônicos cardíacos (hERG).",clinicalEffect:"Risco muito elevado de Torsades de Pointes e morte súbita cardíaca.",management:"CONTRAINDICADO. Se imprescindível, monitoramento contínuo de ECG em UTI. Corrigir eletrólitos.",qtRisk:true},
+  {id:8,drug1:"TKIs (sunitinibe, pazopanibe, axitinibe)",drug2:"Diltiazem / Verapamil",severity:"grave",mechanism:"Diltiazem e verapamil inibem CYP3A4, aumentando níveis plasmáticos dos TKIs. Efeito aditivo na PA.",clinicalEffect:"Toxicidade aumentada dos TKIs. Hipotensão e bradicardia.",management:"Evitar combinação. Usar anlodipino como alternativa para controle de PA em pacientes com TKI.",qtRisk:false},
+];
+
+const CTCAE_DATA = [
+  {toxicity:"Disfunção Ventricular Esquerda / Insuficiência Cardíaca",grade1:"LVEF 40-50% (queda ≥10pp do basal) assintomático",grade2:"LVEF 30-40% ou queda ≥20pp; sintomas leves com atividade moderada",grade3:"LVEF <30% ou sintomas graves em repouso; hospitalização indicada",grade4:"Risco de vida; intervenção urgente (IABP, transplante)",grade5:"Óbito",management1:"Suspender tratamento temporariamente. Reavaliação em 4-6 semanas. Iniciar IECA/BRA + betabloqueador.",management2:"Suspender tratamento. Iniciar IECA + betabloqueador + diurético. Reavaliação em 4-6 semanas. Retomar se LVEF ≥50%.",management3:"Descontinuar tratamento oncológico. Tratamento intensivo para IC. Encaminhar cardiologista. Considerar internação.",management4:"Descontinuar permanentemente. Suporte hemodinâmico intensivo. UTI cardiológica."},
+  {toxicity:"Miocardite (Imunomediada por ICI)",grade1:"Elevação de troponina sem sintomas, ECG normal",grade2:"Sintomas leves (fadiga, dispneia leve); alterações ECG; troponina elevada",grade3:"Sintomas moderados-graves; alterações hemodinâmicas; bloqueio AV",grade4:"Risco de vida; choque cardiogênico; arritmias ventriculares",grade5:"Óbito",management1:"Suspender ICI. Internação para monitoramento. Ecocardiograma e RNM cardíaca. Considerar biópsia endomiocárdica.",management2:"Suspender ICI permanentemente. Metilprednisolona 1-2 mg/kg/dia IV. Monitoramento cardíaco contínuo.",management3:"Suspender ICI permanentemente. Metilprednisolona 1 g/dia IV por 3-5 dias. Imunossupressão adicional (micofenolato, tacrolimus). UTI.",management4:"Suspender ICI permanentemente. Metilprednisolona 1 g/dia IV. Imunossupressão agressiva. Suporte hemodinâmico. UTI cardiológica."},
+  {toxicity:"Hipertensão Arterial",grade1:"PAS 120-139 mmHg ou PAD 80-89 mmHg (pré-hipertensão)",grade2:"PAS 140-159 mmHg ou PAD 90-99 mmHg; monofármaco indicado",grade3:"PAS ≥160 mmHg ou PAD ≥100 mmHg; múltiplos fármacos ou intensificação",grade4:"Consequências com risco de vida (crise hipertensiva, encefalopatia)",grade5:"Óbito",management1:"Modificações no estilo de vida. Monitoramento frequente de PA.",management2:"Iniciar anti-hipertensivo (IECA/BRA de preferência em pacientes com TKI). Meta: PA <140/90 mmHg.",management3:"Suspender TKI temporariamente. Intensificar tratamento anti-hipertensivo. Retomar com dose reduzida quando PA controlada.",management4:"Descontinuar TKI. Tratamento de emergência hipertensiva. Internação."},
+  {toxicity:"Prolongamento do Intervalo QTc",grade1:"QTcF 450-480 ms",grade2:"QTcF 481-500 ms",grade3:"QTcF >500 ms ou aumento >60 ms do basal",grade4:"QTcF >500 ms com Torsades de Pointes ou TV polimórfica",grade5:"Óbito",management1:"Corrigir eletrólitos (K⁺, Mg²⁺). Revisar medicamentos concomitantes. ECG frequente.",management2:"Suspender fármaco causador temporariamente. Corrigir eletrólitos. ECG frequente. Retomar com dose reduzida.",management3:"Suspender fármaco permanentemente. Monitoramento cardíaco contínuo. Corrigir causas reversíveis.",management4:"Descontinuar permanentemente. Desfibrilação se TV/FV. Magnésio IV para Torsades. UTI cardiológica."},
+  {toxicity:"Pericardite / Derrame Pericárdico",grade1:"Assintomático; derrame pequeno ao ecocardiograma",grade2:"Sintomático (dor torácica, atrito pericárdico); derrame moderado",grade3:"Derrame com comprometimento fisiológico; tamponamento iminente",grade4:"Tamponamento cardíaco; intervenção urgente necessária",grade5:"Óbito",management1:"AINEs (ibuprofeno 600 mg 3x/dia) + colchicina 0,5 mg 2x/dia. Repouso.",management2:"AINEs + colchicina. Suspender fármaco causador se ICI. Considerar corticosteroides se não melhora.",management3:"Pericardiocentese se tamponamento iminente. Corticosteroides. Suspender tratamento oncológico.",management4:"Pericardiocentese de emergência. Suporte hemodinâmico. UTI."},
+  {toxicity:"Arritmias Cardíacas",grade1:"Assintomático; não requer tratamento",grade2:"Sintomático; tratamento não urgente indicado",grade3:"Sintomático; tratamento urgente indicado",grade4:"Risco de vida; intervenção urgente (cardioversão, desfibrilação)",grade5:"Óbito",management1:"Monitoramento de ECG. Corrigir causas reversíveis (eletrólitos, hipóxia).",management2:"Tratamento antiarrítmico conforme tipo de arritmia. Suspender fármaco causador se indicado.",management3:"Tratamento urgente. Suspender tratamento oncológico. Avaliação cardiológica imediata.",management4:"Cardioversão/desfibrilação. Suporte avançado de vida. UTI cardiológica."},
+];
+
+const RISK_FACTORS = [
+  {name:"Doença cardiovascular prévia (IC, DAC, valvopatia grave)",weight:3},
+  {name:"LVEF basal <50%",weight:3},
+  {name:"Antracíclina em alta dose (>250 mg/m² doxorrubicina equivalente)",weight:2},
+  {name:"Radioterapia mediastinal/torácica prévia",weight:2},
+  {name:"Combinação antracíclina + trastuzumabe",weight:2},
+  {name:"Hipertensão arterial sistêmica",weight:1},
+  {name:"Diabetes mellitus",weight:1},
+  {name:"Dislipidemia",weight:1},
+  {name:"Tabagismo ativo",weight:1},
+  {name:"Obesidade (IMC ≥30 kg/m²)",weight:1},
+  {name:"Doença renal crônica (TFG <60 mL/min/1,73m²)",weight:1},
+  {name:"Idade ≥65 anos",weight:1},
+  {name:"Quimioterapia prévia cardiotóxica",weight:1},
+  {name:"Tabagismo prévio (ex-fumante)",weight:0.5},
+  {name:"Sedentarismo",weight:0.5},
+];
+
+const SPECIAL_CARES = [
+  {title:"Miocardite por Inibidores de Checkpoint Imunológico (ICI)",trigger:"Pembrolizumabe, nivolumabe, ipilimumabe, atezolizumabe, durvalumabe",diagnosis:"Suspeitar em: elevação de troponina, alterações no ECG (bloqueios, ST), dispneia, dor torácica, palpitações, síncope. Diagnóstico: troponina + ECG + ecocardiograma + RNM cardíaca (realce tardio de gadolínio não-isquêmico). Biópsia endomiocárdica: padrão-ouro (infiltrado linfocitário).",grading:"Grau 1: troponina elevada, assintomático, ECG normal. Grau 2: sintomas leves, alterações ECG. Grau 3: sintomas moderados-graves, alterações hemodinâmicas, bloqueio AV. Grau 4: risco de vida, choque cardiogênico. Grau 5: óbito.",management:"SUSPENDER ICI IMEDIATAMENTE (qualquer grau ≥2). Grau 1: monitoramento intensivo, considerar suspensão. Grau 2: metilprednisolona 1-2 mg/kg/dia IV. Grau 3-4: metilprednisolona 1 g/dia IV por 3-5 dias → micofenolato 1-1,5 g 2x/dia, tacrolimus, infliximabe 5 mg/kg se refratário. UTI cardiológica.",followUp:"Não reiniciar ICI em grau ≥3. Grau 1-2: considerar reinício com monitoramento intensivo após resolução completa (decisão multidisciplinar). Seguimento cardiológico por 6-12 meses.",references:"ESC 2022 Seção 5.4; ASCO 2018 Management of Immune-Related Adverse Events"},
+  {title:"Disfunção Ventricular por Antracíclinas",trigger:"Doxorrubicina, epirrubicina, daunorrubicina, idarrubicina",diagnosis:"Monitoramento de LVEF por ecocardiograma (preferencial) ou MUGA. Critérios de disfunção: queda de LVEF ≥10 pontos percentuais com LVEF final <53% (ESC 2022) ou <50% (ASCO 2017). Biomarcadores: troponina I/T (marcador precoce), BNP/NT-proBNP (marcador de disfunção).",grading:"Assintomática: queda de LVEF sem sintomas. Sintomática: queda de LVEF + sintomas de IC. Grave: LVEF <35% ou IC refratária.",management:"Assintomática (LVEF 40-50%): suspender antracíclina temporariamente, iniciar IECA + betabloqueador, reavaliação em 4-6 semanas. Sintomática: suspender antracíclina, tratamento completo de IC (IECA + betabloqueador + diurético ± espironolactona). Grave: descontinuar antracíclina, tratamento intensivo de IC.",followUp:"Ecocardiograma a cada 3 meses após suspensão. Retomar antracíclina apenas se LVEF ≥50% e sintomas controlados (decisão multidisciplinar). Seguimento cardiológico por 5 anos pós-tratamento.",references:"ESC 2022 Seção 5.1; ASCO 2017 Prevention and Monitoring"},
+  {title:"Hipertensão por TKIs Anti-VEGF e Anti-VEGFR",trigger:"Sunitinibe, pazopanibe, axitinibe, cabozantinibe, sorafenibe, bevacizumabe, ramucirumabe",diagnosis:"PA ≥140/90 mmHg em 2 medidas consecutivas. Monitoramento: PA antes e durante cada ciclo. Monitoramento domiciliar recomendado. Crise hipertensiva: PA >180/120 mmHg com sintomas.",grading:"Grau 1: PAS 120-139 ou PAD 80-89 mmHg. Grau 2: PAS 140-159 ou PAD 90-99 mmHg. Grau 3: PAS ≥160 ou PAD ≥100 mmHg. Grau 4: Crise hipertensiva com risco de vida.",management:"Meta PA: <140/90 mmHg (geral) | <130/80 mmHg (DM, DRC, DAC). 1ª linha: IECA (enalapril 5-20 mg/dia) ou BRA (losartana 50-100 mg/dia). 2ª linha: anlodipino 5-10 mg/dia. EVITAR diltiazem/verapamil (inibem CYP3A4). Grau 3: suspender TKI temporariamente. Grau 4: suspender permanentemente.",followUp:"PA durante todo o tratamento. Ajuste de dose do TKI se hipertensão refratária. Avaliação de órgão-alvo periodicamente.",references:"ESC 2022 Seção 5.3; ASCO 2017"},
+  {title:"Síndrome de Takotsubo Relacionada ao Câncer",trigger:"Estresse emocional/físico intenso (diagnóstico, cirurgia, quimioterapia), uso de 5-FU, capecitabina",diagnosis:"Disfunção transitória do VE com padrão apical (ballooning apical). Critérios Mayo Clinic: 1) Disfunção transitória do VE (acinesia/discinesia apical); 2) Ausência de DAC obstrutiva; 3) Alterações de ECG; 4) Ausência de feocromocitoma ou miocardite.",grading:"Leve: disfunção transitória sem complicações. Moderada: IC aguda compensada. Grave: choque cardiogênico, arritmias, trombo apical.",management:"Suporte hemodinâmico. IECA + betabloqueador (cautela: betabloqueador pode piorar vasoespasmo na fase aguda). Anticoagulação se trombo apical. Evitar inotrópicos. Recuperação geralmente em 4-8 semanas.",followUp:"Ecocardiograma seriado até recuperação da LVEF. Recorrência: ~10% ao ano. Considerar betabloqueador como prevenção secundária.",references:"ESC 2022 Seção 6; Heart Failure Association 2022"},
+  {title:"Tromboembolismo Venoso em Pacientes Oncológicos",trigger:"Todos os pacientes oncológicos (risco 4-7x maior). Maior risco: adenocarcinoma de pâncreas, pulmão, ovário, gástrico; TKIs; talidomida/lenalidomida; hospitalização; cirurgia.",diagnosis:"Score de Khorana: sítio tumoral (pâncreas/estômago = 2pts; pulmão/linfoma/ginecológico/bexiga/testículo = 1pt), plaquetas ≥350.000/mm³ (1pt), Hb <10 g/dL ou eritropoetina (1pt), leucócitos >11.000/mm³ (1pt), IMC ≥35 kg/m² (1pt). Score ≥3 = alto risco.",grading:"TVP proximal, TVP distal, TEP subsegmentar, TEP segmentar/lobar, TEP maciço.",management:"Profilaxia (Khorana ≥2): HBPM (enoxaparina 40 mg SC/dia) ou rivaroxabana 10 mg/dia ou apixabana 2,5 mg 2x/dia. Tratamento: HBPM ou DOAC (rivaroxabana 15 mg 2x/dia por 21 dias → 20 mg/dia; apixabana 10 mg 2x/dia por 7 dias → 5 mg 2x/dia). Duração: mínimo 6 meses; indefinido se câncer ativo.",followUp:"Monitoramento de recorrência e sangramento. Revisão periódica da indicação de anticoagulação.",references:"ESC 2022 Seção 9; ASCO 2023 VTE Guidelines"},
+];
+
+const TREATMENT_PROTOCOLS = [
+  {name:"ACdd → T semanal",indication:"Mama RH+/HER2- ou TNBC - adjuvância/neoadjuvância",drugs:[{name:"Doxorrubicina",dose:"60 mg/m²",route:"EV",schedule:"D1"},{name:"Ciclofosfamida",dose:"600 mg/m²",route:"EV",schedule:"D1"},{name:"Filgrastim",dose:"300 mcg",route:"SC",schedule:"D3-D10 (ou Pegfilgrastim 6 mg D2)"}],cycleLength:"14 dias (dose-densa)",totalCycles:"4 ciclos AC → 12 semanas paclitaxel 80 mg/m² semanal",cardiotoxicityRisk:"alto",monitoring:"Ecocardiograma basal, após 200 mg/m² doxorrubicina e ao final do AC.",sbocReference:"SBOC 2026 - Mama Adjuvância (NE ALTO/FR FORTE)"},
+  {name:"TCHP",indication:"Mama HER2+ - neoadjuvância/adjuvância",drugs:[{name:"Docetaxel",dose:"75 mg/m²",route:"EV",schedule:"D1"},{name:"Carboplatina",dose:"AUC 6",route:"EV",schedule:"D1"},{name:"Trastuzumabe",dose:"8 mg/kg (C1) → 6 mg/kg",route:"EV",schedule:"D1"},{name:"Pertuzumabe",dose:"840 mg (C1) → 420 mg",route:"EV",schedule:"D1"}],cycleLength:"21 dias",totalCycles:"6 ciclos + manutenção com trastuzumabe ± pertuzumabe até completar 1 ano",cardiotoxicityRisk:"moderado",monitoring:"Ecocardiograma basal e a cada 3 meses durante trastuzumabe.",sbocReference:"SBOC 2026 - Mama Adjuvância/Neoadjuvância (NE ALTO/FR FORTE)"},
+  {name:"TC",indication:"Mama RH+/HER2- - adjuvância (alternativa sem antracíclina)",drugs:[{name:"Docetaxel",dose:"75 mg/m²",route:"EV",schedule:"D1"},{name:"Ciclofosfamida",dose:"600 mg/m²",route:"EV",schedule:"D1"}],cycleLength:"21 dias",totalCycles:"4-6 ciclos",cardiotoxicityRisk:"baixo",monitoring:"Hemograma antes de cada ciclo. Sem monitoramento cardíaco específico.",sbocReference:"SBOC 2026 - Mama Adjuvância (NE ALTO/FR FORTE)"},
+  {name:"Ipilimumabe + Nivolumabe",indication:"CCR células claras - 1ª linha (risco intermediário/alto IMDC) | Melanoma metastático",drugs:[{name:"Ipilimumabe",dose:"1 mg/kg",route:"EV",schedule:"D1 (4 ciclos)"},{name:"Nivolumabe",dose:"3 mg/kg",route:"EV",schedule:"D1 (4 ciclos), depois 240 mg a cada 2 semanas"}],cycleLength:"21 dias (indução) → 14 dias (manutenção)",totalCycles:"4 ciclos de combinação, depois nivolumabe em manutenção até progressão",cardiotoxicityRisk:"alto",monitoring:"Troponina e ECG basais e a cada ciclo nos primeiros 3 meses. Função tireoidiana, hepática e renal.",sbocReference:"SBOC 2026 - Rim (NE ALTO/FR FORTE) | Melanoma (NE ALTO/FR FORTE)"},
+  {name:"Axitinibe + Pembrolizumabe",indication:"CCR células claras - 1ª linha (risco intermediário/alto IMDC)",drugs:[{name:"Axitinibe",dose:"5 mg",route:"VO",schedule:"12/12h continuamente"},{name:"Pembrolizumabe",dose:"200 mg",route:"EV",schedule:"D1 a cada 3 semanas"}],cycleLength:"21 dias",totalCycles:"Até progressão ou toxicidade inaceitável",cardiotoxicityRisk:"moderado",monitoring:"PA diária nas primeiras semanas. Troponina e ECG basais e a cada ciclo. Função tireoidiana e hepática.",sbocReference:"SBOC 2026 - Rim (NE ALTO/FR FORTE)"},
+  {name:"Dabrafenibe + Trametinibe",indication:"Melanoma BRAF V600E/K mutado - adjuvância (estádio III) e metastático",drugs:[{name:"Dabrafenibe",dose:"150 mg",route:"VO",schedule:"12/12h continuamente"},{name:"Trametinibe",dose:"2 mg",route:"VO",schedule:"1x/dia continuamente"}],cycleLength:"Contínuo",totalCycles:"12 meses (adjuvância) | Até progressão (metastático)",cardiotoxicityRisk:"baixo",monitoring:"Ecocardiograma basal e a cada 3 meses. PA. Temperatura corporal (pirexia).",sbocReference:"SBOC 2026 - Melanoma (NE ALTO/FR FORTE)"},
+  {name:"Docetaxel + Abiraterona + Prednisona",indication:"Próstata sensível à castração metastático de alto volume/risco",drugs:[{name:"Docetaxel",dose:"75 mg/m²",route:"EV",schedule:"D1 a cada 3 semanas"},{name:"Abiraterona",dose:"1.000 mg",route:"VO",schedule:"1x/dia em jejum"},{name:"Prednisona",dose:"5 mg",route:"VO",schedule:"1x/dia"}],cycleLength:"21 dias",totalCycles:"6 ciclos de docetaxel + abiraterona continuamente",cardiotoxicityRisk:"baixo",monitoring:"PA e potássio mensalmente. Função hepática mensalmente nos primeiros 3 meses.",sbocReference:"SBOC 2026 - Próstata Avançada (NE ALTO/FR FORTE)"},
+];
+
+// ============================================================
+// FUNÇÕES DE CÁLCULO
+// ============================================================
+function calcBSA_Mosteller(w,h){return Math.sqrt((h*w)/3600)}
+function calcBSA_DuBois(w,h){return 0.007184*Math.pow(h,0.725)*Math.pow(w,0.425)}
+function calcCrCl(age,w,cr,sex){const f=sex==='feminino'?0.85:1.0;return((140-age)*w*f)/(72*cr)}
+function calcCalvertDose(auc,gfr){return auc*(gfr+25)}
+
+// ============================================================
+// NAVEGAÇÃO
+// ============================================================
+let currentPage='home';
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('#sidebar nav a').forEach(a=>a.classList.remove('active'));
+  if(el)el.classList.add('active');
+  currentPage=id;
+  document.getElementById('topbar-title').textContent=el?el.textContent.trim():'CardioOncologia';
+  closeSidebar();
+  // Render content on first visit
+  if(id==='search')renderDrugList('');
+  if(id==='protocol')renderProtocol(0);
+  if(id==='monitoring')renderMonitoring();
+  if(id==='ctcae')renderCTCAE();
+  if(id==='interactions')renderInteractions();
+  if(id==='special')renderSpecial();
+  if(id==='protocols')renderProtocols();
+  if(id==='cardio')renderRiskFactors();
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ============================================================
+// BUSCA RÁPIDA
+// ============================================================
+function filterDrugs(q){renderDrugList(q)}
+function renderDrugList(q){
+  const list=document.getElementById('drug-list');
+  const term=q.toLowerCase().trim();
+  const filtered=MEDICATIONS.filter(m=>
+    !term||
+    m.genericName.toLowerCase().includes(term)||
+    m.brandNames.toLowerCase().includes(term)||
+    (DRUG_CLASSES.find(c=>c.id===m.drugClassId)?.name||'').toLowerCase().includes(term)
+  );
+  if(!filtered.length){list.innerHTML='<div class="alert alert-info">Nenhum medicamento encontrado para "'+q+'".</div>';return}
+  list.innerHTML=filtered.map(m=>renderDrugCard(m)).join('');
+}
+function renderDrugCard(m){
+  const cls=DRUG_CLASSES.find(c=>c.id===m.drugClassId);
+  const riskClass='risk-'+m.cardiotoxicityRisk;
+  const icons=[];
+  if(m.lvefMonitoring)icons.push('<span class="badge badge-info" title="Monitoramento de LVEF">LVEF</span>');
+  if(m.qtProlongation)icons.push('<span class="badge badge-warning" title="Risco de QT prolongado">QTc</span>');
+  if(m.hypertensionRisk)icons.push('<span class="badge badge-danger" title="Risco de hipertensão">HAS</span>');
+  if(m.myocarditisRisk)icons.push('<span class="badge badge-danger" title="Risco de miocardite">Miocardite</span>');
+  return `<div class="drug-card" onclick="toggleDrug(this)">
+    <div class="drug-card-header">
+      <div>
+        <strong>${m.genericName}</strong>
+        <span style="color:var(--muted);font-size:12px;margin-left:6px">${m.brandNames}</span>
+        <div style="margin-top:4px"><span class="badge badge-gray">${cls?.name||''}</span></div>
+      </div>
+      <div style="text-align:right">
+        <span class="${riskClass}">${m.cardiotoxicityRisk.replace('_',' ').toUpperCase()}</span>
+        <div style="margin-top:4px;display:flex;gap:4px;justify-content:flex-end">${icons.join('')}</div>
+      </div>
+    </div>
+    <div class="drug-card-body">
+      <div class="drug-info-row"><span class="drug-info-label">Dose padrão:</span><span>${m.standardDose}</span></div>
+      ${m.maxCumulativeDose?`<div class="drug-info-row"><span class="drug-info-label">Dose cumulativa máx:</span><span><strong>${m.maxCumulativeDose} ${m.maxCumulativeDoseUnit}</strong></span></div>`:''}
+      <div class="drug-info-row"><span class="drug-info-label">Mecanismo:</span><span>${m.mechanismOfAction}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Indicações:</span><span>${m.indications}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Perfil cardiotóxico:</span><span>${m.cardiotoxicityProfile}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Ajuste renal:</span><span>${m.renalAdjustment}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Ajuste hepático:</span><span>${m.hepaticAdjustment}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Cardioproteção:</span><span>${m.cardioProtection}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Referências:</span><span style="color:var(--muted)">${m.references}</span></div>
+    </div>
+  </div>`;
+}
+function toggleDrug(el){
+  const body=el.querySelector('.drug-card-body');
+  body.classList.toggle('show');
+}
+
+// ============================================================
+// PROTOCOLO
+// ============================================================
+function filterByClass(classId,el){
+  document.querySelectorAll('#protocol-tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderProtocol(classId);
+}
+function renderProtocol(classId){
+  const list=document.getElementById('protocol-list');
+  const filtered=classId===0?MEDICATIONS:MEDICATIONS.filter(m=>m.drugClassId===classId);
+  list.innerHTML=filtered.map(m=>renderDrugCard(m)).join('');
+}
+
+// ============================================================
+// CALCULADORA
+// ============================================================
+function calcAll(){
+  const w=parseFloat(document.getElementById('calc-weight').value);
+  const h=parseFloat(document.getElementById('calc-height').value);
+  const age=parseFloat(document.getElementById('calc-age').value);
+  const sex=document.getElementById('calc-sex').value;
+  const cr=parseFloat(document.getElementById('calc-creatinine').value);
+  const dose=parseFloat(document.getElementById('calc-dose').value);
+  const unit=document.getElementById('calc-unit').value;
+  const res=document.getElementById('calc-results');
+  if(!w||!h){res.innerHTML='';return}
+  const bsaMost=calcBSA_Mosteller(w,h);
+  const bsaDub=calcBSA_DuBois(w,h);
+  let crclHtml='';
+  if(age&&cr){
+    const crcl=calcCrCl(age,w,cr,sex);
+    crclHtml=`<div class="drug-info-row"><span class="drug-info-label">ClCr (Cockcroft-Gault):</span><span><strong>${crcl.toFixed(1)} mL/min</strong></span></div>`;
+  }
+  let doseHtml='';
+  if(dose&&unit!=='fixed'){
+    const dMost=unit==='m2'?dose*bsaMost:dose*w;
+    const dDub=unit==='m2'?dose*bsaDub:dose*w;
+    doseHtml=`
+      <div class="drug-info-row"><span class="drug-info-label">Dose calculada (Mosteller):</span><span><strong>${dMost.toFixed(1)} mg</strong></span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Dose calculada (DuBois):</span><span><strong>${dDub.toFixed(1)} mg</strong></span></div>`;
+  }
+  res.innerHTML=`<div class="card">
+    <div class="card-title">Resultados</div>
+    <div class="drug-info-row"><span class="drug-info-label">BSA Mosteller:</span><span><strong>${bsaMost.toFixed(3)} m²</strong></span></div>
+    <div class="drug-info-row"><span class="drug-info-label">BSA DuBois:</span><span><strong>${bsaDub.toFixed(3)} m²</strong></span></div>
+    ${crclHtml}${doseHtml}
+    <div style="margin-top:8px;font-size:11px;color:var(--muted)">Fórmulas: Mosteller = √(altura × peso / 3600) | DuBois = 0,007184 × altura⁰·⁷²⁵ × peso⁰·⁴²⁵ | Cockcroft-Gault = (140-idade) × peso × (0,85 se feminino) / (72 × creatinina)</div>
+  </div>`;
+  // Auto-fill GFR for Calvert
+  if(age&&cr){
+    const crcl=calcCrCl(age,w,cr,sex);
+    document.getElementById('calc-gfr').value=crcl.toFixed(0);
+    calcCalvert();
+  }
+}
+function calcCalvert(){
+  const auc=parseFloat(document.getElementById('calc-auc').value);
+  const gfr=parseFloat(document.getElementById('calc-gfr').value);
+  const res=document.getElementById('calvert-result');
+  if(!auc||!gfr){res.innerHTML='';return}
+  const dose=calcCalvertDose(auc,gfr);
+  res.innerHTML=`<div class="alert alert-success"><strong>Dose de Carboplatina (Calvert):</strong> ${dose.toFixed(0)} mg<br><small>Fórmula: Dose = AUC × (GFR + 25) = ${auc} × (${gfr} + 25) = ${dose.toFixed(0)} mg</small></div>`;
+}
+
+// ============================================================
+// CARDIO-ONCOLOGIA — RISCO
+// ============================================================
+function renderRiskFactors(){
+  const list=document.getElementById('risk-factors-list');
+  list.innerHTML=RISK_FACTORS.map((f,i)=>`
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;cursor:pointer;font-size:13px;font-weight:normal;text-transform:none;letter-spacing:0">
+      <input type="checkbox" id="rf-${i}" style="width:auto;margin-top:2px">
+      <span>${f.name} <span class="badge badge-gray">peso: ${f.weight}</span></span>
+    </label>`).join('');
+}
+function calcRisk(){
+  let score=0;
+  RISK_FACTORS.forEach((f,i)=>{
+    if(document.getElementById('rf-'+i)?.checked)score+=f.weight;
+  });
+  let level,label,color,rec;
+  if(score===0){level='baixo';label='BAIXO';color='success';rec='Monitoramento padrão. Ecocardiograma basal e conforme protocolo do tratamento.'}
+  else if(score<=2){level='moderado';label='MODERADO';color='warning';rec='Monitoramento reforçado. Ecocardiograma basal e a cada 3 meses durante tratamento cardiotóxico. Otimizar fatores de risco CV.'}
+  else if(score<=4){level='alto';label='ALTO';color='danger';rec='Avaliação cardiológica antes do tratamento. Monitoramento intensivo com ecocardiograma, troponina e BNP. Considerar cardio-oncologista.'}
+  else{level='muito_alto';label='MUITO ALTO';color='danger';rec='Avaliação obrigatória por cardio-oncologista antes do tratamento. Monitoramento muito intensivo. Considerar modificação do protocolo oncológico.'}
+  const res=document.getElementById('risk-result');
+  const content=document.getElementById('risk-result-content');
+  content.innerHTML=`
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <span class="risk-${level}" style="font-size:16px;padding:6px 16px">RISCO ${label}</span>
+      <span style="font-size:24px;font-weight:800;color:var(--${color==='success'?'success':color==='warning'?'warning':'danger'})">${score} pontos</span>
+    </div>
+    <div class="alert alert-${color==='success'?'success':color==='warning'?'warning':'danger'}"><strong>Recomendação ESC 2022:</strong> ${rec}</div>`;
+  res.style.display='block';
+}
+
+// ============================================================
+// MONITORAMENTO
+// ============================================================
+function renderMonitoring(){
+  const el=document.getElementById('monitoring-content');
+  const groups=[
+    {label:"Antracíclinas (Doxorrubicina, Epirrubicina)",meds:[1,2]},
+    {label:"Trastuzumabe / Pertuzumabe / T-DM1",meds:[3,4,5]},
+    {label:"ICI (Pembrolizumabe, Nivolumabe, Ipilimumabe)",meds:[6,7,8]},
+    {label:"TKIs Anti-VEGF (Sunitinibe, Pazopanibe)",meds:[9,10]},
+    {label:"Ribociclibe (CDK4/6)",meds:[15]},
+  ];
+  const scheduleData=[
+    {med:1,timepoint:"Basal",echo:true,ecg:true,trop:true,bnp:true,bp:true,cbc:true,renal:true,hepatic:true,notes:"LVEF deve ser ≥50% para iniciar."},
+    {med:1,timepoint:"Após 100 mg/m²",echo:true,ecg:false,trop:true,bnp:false,bp:true,cbc:true,renal:false,hepatic:false,notes:"Monitoramento de dose cumulativa."},
+    {med:1,timepoint:"Após 200 mg/m²",echo:true,ecg:false,trop:true,bnp:true,bp:true,cbc:true,renal:false,hepatic:false,notes:"Atenção para queda de LVEF."},
+    {med:1,timepoint:"Após 300 mg/m²",echo:true,ecg:true,trop:true,bnp:true,bp:true,cbc:true,renal:true,hepatic:true,notes:"Considerar dexrazoxano se LVEF limítrofe."},
+    {med:1,timepoint:"6 meses pós-tratamento",echo:true,ecg:false,trop:true,bnp:true,bp:true,cbc:false,renal:false,hepatic:false,notes:"Seguimento pós-tratamento."},
+    {med:3,timepoint:"Basal",echo:true,ecg:false,trop:false,bnp:false,bp:true,cbc:true,renal:false,hepatic:false,notes:"LVEF deve ser ≥50% para iniciar."},
+    {med:3,timepoint:"A cada 3 meses",echo:true,ecg:false,trop:false,bnp:false,bp:true,cbc:false,renal:false,hepatic:false,notes:"Suspender se LVEF cair ≥10pp e ficar <50%."},
+    {med:3,timepoint:"6 meses pós-tratamento",echo:true,ecg:false,trop:false,bnp:false,bp:true,cbc:false,renal:false,hepatic:false,notes:"Seguimento pós-tratamento."},
+    {med:6,timepoint:"Basal",echo:false,ecg:true,trop:true,bnp:false,bp:true,cbc:true,renal:true,hepatic:true,notes:"Avaliar TSH, T4L e glicemia."},
+    {med:6,timepoint:"A cada ciclo (primeiros 3 meses)",echo:false,ecg:true,trop:true,bnp:false,bp:true,cbc:true,renal:true,hepatic:true,notes:"Monitoramento intensivo inicial para miocardite."},
+    {med:6,timepoint:"A cada 2-3 ciclos (após 3 meses)",echo:false,ecg:false,trop:true,bnp:false,bp:true,cbc:true,renal:true,hepatic:true,notes:"Monitoramento de rotina."},
+    {med:9,timepoint:"Basal",echo:true,ecg:true,trop:false,bnp:false,bp:true,cbc:true,renal:true,hepatic:true,notes:"Avaliar TSH."},
+    {med:9,timepoint:"Semanal (primeiros 2 ciclos)",echo:false,ecg:false,trop:false,bnp:false,bp:true,cbc:false,renal:false,hepatic:false,notes:"Meta PA <140/90 mmHg."},
+    {med:9,timepoint:"A cada ciclo",echo:false,ecg:false,trop:false,bnp:false,bp:true,cbc:true,renal:true,hepatic:true,notes:"TSH a cada 2-3 ciclos."},
+    {med:15,timepoint:"Basal",echo:false,ecg:true,trop:false,bnp:false,bp:true,cbc:true,renal:false,hepatic:true,notes:"QTcF deve ser <450 ms. Corrigir eletrólitos."},
+    {med:15,timepoint:"D14 do Ciclo 1",echo:false,ecg:true,trop:false,bnp:false,bp:false,cbc:true,renal:false,hepatic:false,notes:"Suspender se QTcF >500 ms."},
+    {med:15,timepoint:"Início do Ciclo 2",echo:false,ecg:true,trop:false,bnp:false,bp:false,cbc:true,renal:false,hepatic:true,notes:"Monitoramento de QTcF e neutrófilos."},
+  ];
+  function chk(v){return`<span class="monitor-check ${v?'check-yes':'check-no'}">${v?'✓':'—'}</span>`}
+  el.innerHTML=groups.map(g=>{
+    const rows=scheduleData.filter(s=>g.meds.includes(s.med));
+    return`<div class="card" style="margin-bottom:16px">
+      <div class="card-title">${g.label}</div>
+      <div class="table-wrap"><table>
+        <tr><th>Momento</th><th>Echo</th><th>ECG</th><th>Trop</th><th>BNP</th><th>PA</th><th>Hemo</th><th>Renal</th><th>Hep</th><th>Observações</th></tr>
+        ${rows.map(r=>`<tr><td>${r.timepoint}</td><td>${chk(r.echo)}</td><td>${chk(r.ecg)}</td><td>${chk(r.trop)}</td><td>${chk(r.bnp)}</td><td>${chk(r.bp)}</td><td>${chk(r.cbc)}</td><td>${chk(r.renal)}</td><td>${chk(r.hepatic)}</td><td style="font-size:12px">${r.notes}</td></tr>`).join('')}
+      </table></div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CTCAE v5.0
+// ============================================================
+function renderCTCAE(){
+  const el=document.getElementById('ctcae-content');
+  const gradeColors=['','badge-success','badge-warning','badge-danger','badge-danger'];
+  el.innerHTML=CTCAE_DATA.map(t=>`
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">⚠️ ${t.toxicity}</div>
+      <div class="table-wrap"><table>
+        <tr><th>Grau</th><th>Definição</th><th>Conduta</th></tr>
+        <tr><td><span class="badge ${gradeColors[1]}">Grau 1</span></td><td>${t.grade1}</td><td>${t.management1}</td></tr>
+        <tr><td><span class="badge ${gradeColors[2]}">Grau 2</span></td><td>${t.grade2}</td><td>${t.management2}</td></tr>
+        <tr><td><span class="badge ${gradeColors[3]}">Grau 3</span></td><td>${t.grade3}</td><td>${t.management3}</td></tr>
+        <tr><td><span class="badge ${gradeColors[4]}">Grau 4</span></td><td>${t.grade4}</td><td>${t.management4}</td></tr>
+        <tr><td><span class="badge badge-gray">Grau 5</span></td><td colspan="2">${t.grade5}</td></tr>
+      </table></div>
+    </div>`).join('');
+}
+
+// ============================================================
+// INTERAÇÕES
+// ============================================================
+function renderInteractions(){
+  const el=document.getElementById('interactions-content');
+  const sevColors={contraindicada:'badge-danger',grave:'badge-danger',moderada:'badge-warning',leve:'badge-success'};
+  el.innerHTML=`
+    <div class="alert alert-warning">⚠️ As interações listadas têm relevância clínica cardiovascular. Sempre consulte fontes atualizadas antes de prescrever.</div>
+    ${DRUG_INTERACTIONS.map(i=>`
+    <div class="card" style="margin-bottom:12px">
+      <div class="card-title" style="flex-wrap:wrap;gap:8px">
+        <span>${i.drug1}</span>
+        <span style="color:var(--muted)">×</span>
+        <span>${i.drug2}</span>
+        <span class="badge ${sevColors[i.severity]}">${i.severity.toUpperCase()}</span>
+        ${i.qtRisk?'<span class="badge badge-warning">Risco QT</span>':''}
+      </div>
+      <div class="drug-info-row"><span class="drug-info-label">Mecanismo:</span><span>${i.mechanism}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Efeito clínico:</span><span>${i.clinicalEffect}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Conduta:</span><span><strong>${i.management}</strong></span></div>
+    </div>`).join('')}`;
+}
+
+// ============================================================
+// CUIDADOS ESPECIAIS
+// ============================================================
+function renderSpecial(){
+  const el=document.getElementById('special-content');
+  el.innerHTML=SPECIAL_CARES.map(s=>`
+    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+      <strong>🩺 ${s.title}</strong>
+      <span class="chevron">▼</span>
+    </div>
+    <div class="collapsible-body">
+      <div class="drug-info-row"><span class="drug-info-label">Gatilho:</span><span>${s.trigger}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Diagnóstico:</span><span>${s.diagnosis}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Estadiamento:</span><span>${s.grading}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Manejo:</span><span><strong>${s.management}</strong></span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Seguimento:</span><span>${s.followUp}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Referências:</span><span style="color:var(--muted)">${s.references}</span></div>
+    </div>`).join('');
+}
+function toggleCollapsible(header){
+  const body=header.nextElementSibling;
+  const chevron=header.querySelector('.chevron');
+  body.classList.toggle('show');
+  chevron.classList.toggle('open');
+}
+
+// ============================================================
+// PROTOCOLOS QT
+// ============================================================
+function renderProtocols(){
+  const el=document.getElementById('protocols-content');
+  const riskColors={baixo:'success',moderado:'warning',alto:'danger',muito_alto:'danger'};
+  el.innerHTML=TREATMENT_PROTOCOLS.map(p=>`
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title" style="justify-content:space-between">
+        <span>💊 ${p.name}</span>
+        <span class="risk-${p.cardiotoxicityRisk}">${p.cardiotoxicityRisk.replace('_',' ').toUpperCase()}</span>
+      </div>
+      <div class="card-subtitle">${p.indication}</div>
+      <div class="table-wrap"><table>
+        <tr><th>Fármaco</th><th>Dose</th><th>Via</th><th>Esquema</th></tr>
+        ${p.drugs.map(d=>`<tr><td><strong>${d.name}</strong></td><td>${d.dose}</td><td>${d.route}</td><td>${d.schedule}</td></tr>`).join('')}
+      </table></div>
+      <div class="drug-info-row"><span class="drug-info-label">Duração do ciclo:</span><span>${p.cycleLength}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Total de ciclos:</span><span>${p.totalCycles}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Monitoramento:</span><span>${p.monitoring}</span></div>
+      <div class="drug-info-row"><span class="drug-info-label">Referência SBOC:</span><span style="color:var(--muted)">${p.sbocReference}</span></div>
+    </div>`).join('');
+}
+
+// ============================================================
+// INICIALIZAÇÃO
+// ============================================================
+document.addEventListener('DOMContentLoaded',()=>{
+  // Render home page stats
+  renderRiskFactors();
+});
+</script>
+</body>
+</html>

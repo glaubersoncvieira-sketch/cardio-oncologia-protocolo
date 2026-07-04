@@ -218,3 +218,31 @@ Desenvolvido com base clínica nas diretrizes:
 - [ASCO 2017 Cardio-Oncology Guidelines](https://ascopubs.org/doi/10.1200/JCO.2016.70.5400)
 - [SBOC 2026 Diretrizes Públicas](https://2026.sboc.org.br/diretrizes-publicas/)
 - [CTCAE v5.0 — NCI](https://ctep.cancer.gov/protocoldevelopment/electronic_applications/ctc.htm)
+
+---
+
+## Atualização v2.0 — Julho 2026
+
+### Novas Funcionalidades
+
+**Sistema de Atualização Automática Quinzenal**
+- Job Heartbeat criado (dias 1 e 15 de cada mês, 08:00 UTC)
+- Handler `/api/scheduled/heartbeat-update`: busca automática de novas evidências via PubMed e OpenFDA
+- Handler `/api/scheduled/agent-update`: recebe dados do agente IA para atualização de protocolos
+- Página **Atualizações** no dashboard: histórico de jobs e atualizações detectadas
+- Badge de notificação no menu lateral quando há atualizações pendentes
+- Card de status no Dashboard principal
+
+**Versão Offline v2.0 (`cardio_oncologia_offline_v2.html`)**
+- 20 medicamentos com perfil completo de cardiotoxicidade (vs 10 na v1.0)
+- Mecanismo de ação detalhado para todos os fármacos
+- Calculadora BSA (Mosteller e DuBois), ClCr (Cockcroft-Gault) e Dose Calvert
+- 8 interações medicamentosas cardiotóxicas (vs 6 na v1.0)
+- 5 cuidados especiais com protocolo de manejo completo
+- 7 protocolos de quimioterapia com referência SBOC 2026
+- Interface responsiva com sidebar colapsável para mobile
+
+### Base de Dados Clínica
+- **20 medicamentos** em 10 classes farmacológicas
+- **Diretrizes**: ESC 2022, ASCO 2017, SBOC 2026
+- **22 testes automatizados** passando (Vitest)

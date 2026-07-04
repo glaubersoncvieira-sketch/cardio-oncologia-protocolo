@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, BookOpen, Calculator, Heart, Activity, AlertTriangle, Zap, Stethoscope, FileText, Home } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, BookOpen, Calculator, Heart, Activity, AlertTriangle, Zap, Stethoscope, FileText, Home, RefreshCw } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -38,6 +39,7 @@ const menuItems = [
   { icon: Stethoscope, label: "Cuidados Especiais", path: "/special-cares" },
   { icon: Users, label: "Pacientes", path: "/patients" },
   { icon: FileText, label: "Relatório", path: "/report" },
+  { icon: RefreshCw, label: "Atualizações", path: "/updates" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
@@ -116,6 +118,9 @@ function DashboardLayoutContent({
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
+  const { data: pendingUpdates = 0 } = trpc.updates.countPending.useQuery(undefined, {
+    refetchInterval: 5 * 60 * 1000, // refetch a cada 5 minutos
+  });
   const { state, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [isResizing, setIsResizing] = useState(false);
@@ -202,7 +207,12 @@ function DashboardLayoutContent({
                       <item.icon
                         className={`h-4 w-4 ${isActive ? "text-primary" : ""}`}
                       />
-                      <span>{item.label}</span>
+                      <span className="flex-1">{item.label}</span>
+                      {item.path === "/updates" && pendingUpdates > 0 && (
+                        <span className="ml-auto inline-flex items-center justify-center rounded-full bg-amber-500 text-white text-xs font-bold min-w-[18px] h-[18px] px-1">
+                          {pendingUpdates}
+                        </span>
+                      )}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );

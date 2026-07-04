@@ -184,3 +184,40 @@ export const monitoringSchedules = mysqlTable("monitoring_schedules", {
 });
 
 export type MonitoringSchedule = typeof monitoringSchedules.$inferSelect;
+
+// ─── TABELAS DE ATUALIZAÇÃO AUTOMÁTICA QUINZENAL ─────────────────────────────
+
+export const updateJobs = mysqlTable("update_jobs", {
+  id: int("id").autoincrement().primaryKey(),
+  jobType: varchar("jobType", { length: 50 }).notNull(), // 'heartbeat' | 'agent'
+  status: varchar("status", { length: 30 }).notNull().default("running"), // 'running' | 'completed' | 'failed'
+  sourcesChecked: text("sourcesChecked"), // JSON array de fontes consultadas
+  drugsFound: int("drugsFound").default(0),
+  drugsUpdated: int("drugsUpdated").default(0),
+  alertsFound: int("alertsFound").default(0),
+  githubCommit: varchar("githubCommit", { length: 100 }),
+  errorMessage: text("errorMessage"),
+  summary: text("summary"), // resumo legível do que foi atualizado
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+
+export const drugUpdates = mysqlTable("drug_updates", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull(),
+  drugName: varchar("drugName", { length: 200 }).notNull(),
+  updateType: varchar("updateType", { length: 50 }).notNull(), // 'new_drug' | 'cardiotoxicity_alert' | 'dose_update' | 'new_indication' | 'safety_alert'
+  source: varchar("source", { length: 100 }).notNull(), // 'pubmed' | 'openfda' | 'sboc' | 'asco' | 'esc'
+  sourceUrl: text("sourceUrl"),
+  title: varchar("title", { length: 500 }).notNull(),
+  description: text("description").notNull(),
+  clinicalRelevance: varchar("clinicalRelevance", { length: 20 }).default("moderada"), // 'baixa' | 'moderada' | 'alta' | 'critica'
+  applied: boolean("applied").default(false),
+  appliedAt: timestamp("appliedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UpdateJob = typeof updateJobs.$inferSelect;
+export type InsertUpdateJob = typeof updateJobs.$inferInsert;
+export type DrugUpdate = typeof drugUpdates.$inferSelect;
+export type InsertDrugUpdate = typeof drugUpdates.$inferInsert;

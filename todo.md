@@ -81,3 +81,15 @@
 - [x] Vitest: testes de ajuste de dose por ClCr
 - [x] Vitest: testes de interações medicamentosas
 - [x] Vitest: 16 testes passando (auth.logout + cardiooncology)
+
+## Atualização Automática Quinzenal
+
+- [x] Criar tabelas drug_updates e update_jobs no banco de dados
+- [x] Implementar handler /api/scheduled/heartbeat-update (busca PubMed + OpenFDA)
+- [x] Implementar handler /api/scheduled/agent-update (recebe dados do agente IA)
+- [x] Registrar handlers no server/_core/index.ts
+- [x] Criar job Heartbeat quinzenal via manus-heartbeat CLI (task_uid: DnjqyN55zhr2BkXjk74qdA)
+- [ ] Criar job AGENT quinzenal para pesquisa nos sites SBOC/ASCO/ESC
+- [x] Criar página Updates.tsx com histórico de jobs e atualizações detectadas
+- [x] Adicionar badge de notificação no DashboardLayout e card no Dashboard.tsx
+- [ ] Testes e checkpoint final

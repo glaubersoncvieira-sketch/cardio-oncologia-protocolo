@@ -17,6 +17,7 @@ import SpecialCaresPage from "./pages/SpecialCares";
 import PatientsPage from "./pages/Patients";
 import PatientDetailPage from "./pages/PatientDetail";
 import ReportPage from "./pages/Report";
+import UpdatesPage from "./pages/Updates";
 
 function AppRouter() {
   return (
@@ -72,6 +73,9 @@ function AppRouter() {
       </Route>
       <Route path="/report">
         <DashboardLayout><ReportPage /></DashboardLayout>
+      </Route>
+      <Route path="/updates">
+        <DashboardLayout><UpdatesPage /></DashboardLayout>
       </Route>
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

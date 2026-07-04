@@ -4,7 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { getDb } from "./db";
-import { patients, patientAssessments, drugClasses, medications, drugInteractions, monitoringSchedules } from "../drizzle/schema";
+import { patients, patientAssessments, drugClasses, medications, drugInteractions, monitoringSchedules, updateJobs, drugUpdates } from "../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import {
   DRUG_CLASSES,
@@ -397,6 +397,54 @@ export const appRouter = router({
           .limit(1);
         return result[0] || null;
       }),
+  }),
+
+  // ─── Updates (Atualização Automática Quinzenal) ─────────────────────────────
+  updates: router({
+    // Lista os jobs de atualização mais recentes
+    listJobs: publicProcedure
+      .input(z.object({ limit: z.number().default(10) }).optional())
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        return db.select().from(updateJobs)
+          .orderBy(desc(updateJobs.startedAt))
+          .limit(input?.limit ?? 10);
+      }),
+
+    // Lista as atualizações de medicamentos detectadas
+    listDrugUpdates: publicProcedure
+      .input(z.object({
+        limit: z.number().default(20),
+        applied: z.boolean().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return [];
+        const query = db.select().from(drugUpdates)
+          .orderBy(desc(drugUpdates.createdAt))
+          .limit(input?.limit ?? 20);
+        return query;
+      }),
+
+    // Conta atualizações pendentes (para badge no dashboard)
+    countPending: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return 0;
+      const result = await db.select().from(drugUpdates)
+        .where(eq(drugUpdates.applied, false));
+      return result.length;
+    }),
+
+    // Último job executado
+    getLastJob: publicProcedure.query(async () => {
+      const db = await getDb();
+      if (!db) return null;
+      const result = await db.select().from(updateJobs)
+        .orderBy(desc(updateJobs.startedAt))
+        .limit(1);
+      return result[0] || null;
+    }),
   }),
 
   // ─── Dashboard ───────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
-import { Users, Heart, Activity, AlertTriangle, Calculator, BookOpen, Stethoscope, Zap, FileText, ChevronRight } from "lucide-react";
+import { Users, Heart, Activity, AlertTriangle, Calculator, BookOpen, Stethoscope, Zap, FileText, ChevronRight, RefreshCw, CheckCircle2, Clock } from "lucide-react";
 
 const riskColors = {
   baixo: "bg-emerald-100 text-emerald-800 border-emerald-300",
@@ -22,6 +22,8 @@ const riskLabels = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { data: patients } = trpc.patients.list.useQuery();
+  const { data: lastJob } = trpc.updates.getLastJob.useQuery();
+  const { data: pendingUpdates = 0 } = trpc.updates.countPending.useQuery();
   // Stats computed from patients list
   const totalPatients = patients?.length || 0;
   const highRiskPatients = patients?.filter(p => p.cardiovascularRisk === "alto" || p.cardiovascularRisk === "muito_alto").length || 0;
@@ -115,6 +117,54 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Card de Atualização Automática */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-foreground">Atualização Automática</h2>
+          <Link href="/updates">
+            <span className="text-sm text-primary hover:underline cursor-pointer flex items-center gap-1">
+              <RefreshCw className="w-3 h-3" /> Ver histórico
+            </span>
+          </Link>
+        </div>
+        <Card className={pendingUpdates > 0 ? "border-amber-300 bg-amber-50" : "border-emerald-200 bg-emerald-50"}>
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {pendingUpdates > 0 ? (
+                  <div className="p-2 bg-amber-100 rounded-lg">
+                    <AlertTriangle className="h-5 w-5 text-amber-600" />
+                  </div>
+                ) : (
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-semibold text-sm text-foreground">
+                    {pendingUpdates > 0
+                      ? `${pendingUpdates} atualização(ões) pendente(s) de revisão`
+                      : "Protocolo atualizado"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {lastJob
+                      ? `Última verificação: ${new Date(lastJob.startedAt).toLocaleDateString("pt-BR")}`
+                      : "Próxima verificação: 15 de julho de 2026"}
+                  </p>
+                </div>
+              </div>
+              {pendingUpdates > 0 && (
+                <Link href="/updates">
+                  <Badge className="bg-amber-500 text-white cursor-pointer hover:bg-amber-600">
+                    Revisar
+                  </Badge>
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* References */}
       <Card className="border-blue-200 bg-blue-50">
